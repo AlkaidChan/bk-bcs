@@ -1899,6 +1899,7 @@ message CompareConfigItemConflictsResp {
     bool is_exist = 4;
     string signature = 5;
     uint64 byte_size = 6;
+    string md5 = 7;
   }
   message TemplateConfig {
     message TemplateRevisionDetail {

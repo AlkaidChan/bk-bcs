@@ -1,29 +1,59 @@
 <template>
-  <bk-dialog
-    :title="t('上传至套餐')"
-    ext-cls="create-to-pkg-dialog"
-    :confirm-text="t('确认')"
-    :cancel-text="t('取消')"
-    :width="640"
-    :is-show="props.show"
-    :esc-close="false"
-    :quick-close="false"
-    :is-loading="props.pending"
-    :is-disabled="props.pending"
-    @confirm="handleConfirm"
-    @closed="close">
-    <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
-      <bk-form-item :label="t('模板套餐')" property="pkgs" required>
-        <bk-select multiple :model-value="selectedPkgs" @change="handleSelectPkg">
-          <bk-option v-for="pkg in allOptions" v-show="pkg.id !== 0" :key="pkg.id" :value="pkg.id" :label="pkg.name">
-          </bk-option>
-          <template #extension>
-            <div
-              :class="['no-specified-option', { selected: unSpecifiedSelected }]"
-              @click="handleSelectUnSpecifiedPkg">
-              {{ t('未指定套餐') }}
-              <Done v-if="unSpecifiedSelected" class="selected-icon" />
+  <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
+    <bk-form-item :label="t('上传至模板套餐')" property="pkgs" required>
+      <bk-select multiple :model-value="selectedPkgs" @change="handleSelectPkg">
+        <bk-option v-for="pkg in allOptions" v-show="pkg.id !== 0" :key="pkg.id" :value="pkg.id" :label="pkg.name">
+        </bk-option>
+        <template #extension>
+          <div :class="['no-specified-option', { selected: unSpecifiedSelected }]" @click="handleSelectUnSpecifiedPkg">
+            {{ t('未指定套餐') }}
+            <Done v-if="unSpecifiedSelected" class="selected-icon" />
+          </div>
+        </template>
+      </bk-select>
+    </bk-form-item>
+  </bk-form>
+  <div v-if="citedList.length">
+    <p class="tips">{{ tips }}</p>
+    <bk-alert
+      v-if="isExceedMaxFileCount"
+      style="margin-bottom: 8px"
+      theme="error"
+      :title="
+        $t('上传后，部分套餐/服务的配置文件数量将超过最大限制 ({n} 个文件)', {
+          n: spaceFeatureFlags.RESOURCE_LIMIT.TmplSetTmplCnt,
+        })
+      " />
+    <bk-loading style="min-height: 100px" :loading="loading">
+      <bk-table
+        v-if="!selectedPkgs.includes(0)"
+        class="cited-app-table"
+        :row-class="getRowCls"
+        :data="citedList"
+        :max-height="maxTableHeight">
+        <bk-table-column :label="t('模板套餐')">
+          <template #default="{ row }">
+            <div v-if="row.template_set_exceeds_limit" class="app-info">
+              <span class="exceeds-limit">{{ row.template_set_name }}</span>
+              <InfoLine class="warn-icon" v-bk-tooltips="{ content: '上传后，该套餐配置文件数量将超过最大限制' }" />
             </div>
+            <span v-else>{{ row.template_set_name }}</span>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="t('使用此套餐的服务')">
+          <template #default="{ row }">
+            <div v-if="row.app_id">
+              <div v-if="row.app_exceeds_limit" class="app-info" @click="goToConfigPage(row.app_id)">
+                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+                <InfoLine class="warn-icon" v-bk-tooltips="{ content: '上传后，该服务配置文件数量将超过最大限制' }" />
+                <LinkToApp class="link-icon" :id="row.app_id" />
+              </div>
+              <div v-else-if="row.app_id" class="app-info" @click="goToConfigPage(row.app_id)">
+                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+                <LinkToApp class="link-icon" :id="row.app_id" />
+              </div>
+            </div>
+            <span v-else>--</span>
           </template>
         </bk-select>
       </bk-form-item>

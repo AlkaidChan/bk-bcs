@@ -634,3 +634,18 @@ func (s *Service) getLatestReleasedKV(kt *kit.Kit, bizID, appID uint32, kv *tabl
 
 	return kv, nil
 }
+
+// KvFetchIDsExcluding Kv 获取指定ID后排除的ID
+func (s *Service) KvFetchIDsExcluding(ctx context.Context, req *pbds.KvFetchIDsExcludingReq) (
+	*pbds.KvFetchIDsExcludingResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	ids, err := s.dao.Kv().FetchIDsExcluding(kt, req.BizId, req.AppId, req.GetIds())
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "get excluded kv failed, err: %s", err))
+	}
+
+	return &pbds.KvFetchIDsExcludingResp{
+		Ids: ids,
+	}, nil
+}

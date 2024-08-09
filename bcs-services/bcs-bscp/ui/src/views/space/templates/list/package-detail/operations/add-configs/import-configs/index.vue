@@ -9,59 +9,33 @@
     :before-close="handleBeforeClose"
     :quick-close="false"
     @closed="handleClose">
-    <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
-      <div class="import-type-select">
-        <div class="label">{{ t('导入方式') }}</div>
-        <bk-radio-group v-model="importType">
-          <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
-          <bk-radio-button label="otherSpace" :disabled="true">{{ t('从其他空间导入') }}</bk-radio-button>
-        </bk-radio-group>
-      </div>
-      <div v-if="importType === 'localFile'">
-        <ImportFromLocalFile
-          :space-id="spaceId"
-          :current-template-space="currentTemplateSpace"
-          :is-template="true"
-          @change="handleUploadFile"
-          @delete="handleDeleteFile"
-          @uploading="uploadFileLoading = $event"
-          @decompressing="decompressing = $event"
-          @file-processing="fileProcessing = $event" />
+    <div v-show="currentStep === 'upload'">
+      <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
+        <div class="import-type-select">
+          <div class="label">{{ t('导入方式') }}</div>
+          <bk-radio-group v-model="importType">
+            <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
+            <bk-radio-button label="otherSpace" :disabled="true">{{ t('从其他空间导入') }}</bk-radio-button>
+          </bk-radio-group>
+        </div>
+        <div v-if="importType === 'localFile'">
+          <ImportFromLocalFile
+            :space-id="spaceId"
+            :current-template-space="currentTemplateSpace"
+            :is-template="true"
+            @change="handleUploadFile"
+            @delete="handleDeleteFile"
+            @uploading="uploadFileLoading = $event"
+            @decompressing="decompressing = $event"
+            @file-processing="fileProcessing = $event" />
+        </div>
       </div>
     </div>
-    <bk-loading
-      :loading="decompressing || fileProcessing"
-      :title="loadingText"
-      class="config-table-loading"
-      mode="spin"
-      theme="primary"
-      size="small"
-      :opacity="0.7">
-      <div v-if="importConfigList.length" class="content">
-        <div class="head">
-          <div class="tips">
-            {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
-            {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
-            {{ t('个已存在,导入后将') }}
-            <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
-          </div>
-        </div>
-        <ConfigTable
-          v-if="nonExistConfigList.length"
-          :table-data="nonExistConfigList"
-          :is-exsit-table="false"
-          :expand="expandNonExistTable"
-          @change-expand="expandNonExistTable = !expandNonExistTable"
-          @change="handleTableChange($event, true)" />
-        <ConfigTable
-          v-if="existConfigList.length"
-          :expand="expandExistTable"
-          :table-data="existConfigList"
-          :is-exsit-table="true"
-          @change-expand="expandExistTable = !expandExistTable"
-          @change="handleTableChange($event, false)" />
-      </div>
-    </bk-loading>
+    <SelectPackage
+      v-if="currentStep === 'import'"
+      ref="selectedPkgsRef"
+      :config-id-list="importConfigIdList"
+      @toggle-btn-disabled="importBtnDisabled = $event" />
     <template #footer>
       <bk-button
         theme="primary"

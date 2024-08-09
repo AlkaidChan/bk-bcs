@@ -389,3 +389,33 @@ func (s *Service) GetReleaseHook(ctx context.Context, req *pbds.GetReleaseHookRe
 
 	return resp, nil
 }
+
+// HookFetchIDsExcluding 获取指定ID后排除的ID
+func (s *Service) HookFetchIDsExcluding(ctx context.Context, req *pbds.HookFetchIDsExcludingReq) (
+	*pbds.HookFetchIDsExcludingResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	ids, err := s.dao.Hook().FetchIDsExcluding(grpcKit, req.BizId, req.GetIds())
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get excluded hook failed, err: %s", err))
+	}
+
+	return &pbds.HookFetchIDsExcludingResp{
+		Ids: ids,
+	}, nil
+}
+
+// GetHookReferencedIDs 获取脚本被引用的IDs
+func (s *Service) GetHookReferencedIDs(ctx context.Context, req *pbds.GetHookReferencedIDsReq) (
+	*pbds.GetHookReferencedIDsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	ids, err := s.dao.Hook().GetReferencedIDs(grpcKit, req.BizId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "retrieve the referenced script failed, err: %s", err))
+	}
+
+	return &pbds.GetHookReferencedIDsResp{
+		Ids: ids,
+	}, nil
+}

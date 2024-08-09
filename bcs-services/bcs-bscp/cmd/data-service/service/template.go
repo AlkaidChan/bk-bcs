@@ -1083,7 +1083,8 @@ func (s *Service) BatchUpdateTemplatePermissions(ctx context.Context, req *pbds.
 		// 更新引用的服务
 		items, err := s.dao.AppTemplateBinding().ListAppTemplateBindingByAppIds(kt, req.GetBizId(), req.GetAppIds())
 		if err != nil {
-			return nil, err
+			return nil, errf.Errorf(errf.DBOpFailed,
+				i18n.T(kt, "list app template bindings by app ids failed, err: %s", err))
 		}
 		for _, item := range items {
 			templateRevisionIDs := make([]uint32, 0, len(item.Spec.Bindings))

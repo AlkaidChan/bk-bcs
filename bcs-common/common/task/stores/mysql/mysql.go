@@ -127,8 +127,19 @@ func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) (*ifac
 		tx = tx.Where("created_at <= ?", opt.CreatedLte)
 	}
 
-	// 只使用id排序
-	tx = tx.Order("id DESC")
+	// 排序
+	if len(opt.Sort) != 0 {
+		for field, direction := range opt.Sort {
+			if direction > 0 {
+				tx = tx.Order(field + " ASC")
+			} else {
+				tx = tx.Order(field + " DESC")
+			}
+		}
+	} else {
+		// 只使用id排序
+		tx = tx.Order("id DESC")
+	}
 
 	result, count, err := FindByPage[TaskRecord](tx, int(opt.Offset), int(opt.Limit))
 	if err != nil {
